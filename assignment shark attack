@@ -1,0 +1,72 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import io 
+
+%load_ext google.colab.data_table
+The google.colab.data_table extension is already loaded. To reload it, use:
+  %reload_ext google.colab.data_table
+
+attack_df = pd.read_csv('/attacks.csv', encoding = 'cp1252')
+df.head()
+
+
+#1Welk type haaien vallen het meeste aan?
+#rename species column
+df = df.rename(columns={'Species ':'Species'})
+
+# species that attack most
+species_attack = df.groupby('Species')['Species'].count().sort_values(ascending=False)
+
+data = go.Bar(x = species_attack.index,y=species_attack.values,text=species_attack.values,textposition='auto', marker_color='red')
+
+layout = go.Layout(title = 'Shark Attack by Species', 
+                   xaxis=dict(title='Species'),
+                   yaxis=dict(title='Attack Count',visible=False),
+                 paper_bgcolor='rgba(0,0,0,0)',
+                 plot_bgcolor='rgba(0,0,0,0)'
+                  )
+                  
+fig = go.Figure(
+    data=data,
+    layout=layout
+)   
+fig.show()
+
+
+# 2) Worden kinderen eerder aangevallen door haaien
+child_attacks = df.groupby("Age <18")['Age <18'].count() 
+child_attacks = child_attacks[(child_attacks.index == Age <18) | (child_attacks.index == Age)]
+                                                                  
+fig = px.pie(child_attacks, values=child_attacks.values, names=child_attacks.index, title='Shark Attacks children')
+fig.update_layout(height=500, width=600)
+fig.show()
+
+
+#3) Zijn aanvallen wanneer deze uitgedaagd zijn gevaarlijker
+prov_attack = df.groupby('Type')['Type'].count()
+prov_attack = prov_attack[(prov_attack.index == 'Provoked') | (prov_attack.index == 'Unprovoked')]
+
+fig = px.bar(prov_attack, x=prov_attack.values, y=prov_attack.index, orientation='h', labels={'index':'','x':'Attack Count'}, 
+             color = prov_attack.index)
+fig.update_layout(height=500, width=800)
+fig.show()
+
+#is gevaarlijk wel of niet dood gaan? Moet er nog zoiets in:
+#danger_attack = prov_attack.groupby('Fatal (Y/N)')['Fatal (Y/N)'].count()
+#danger_attack = prov_attack(['Type','Fatal (Y/N)'],as_index=False)
+#danger_attack = prov_attack.sort_values(by=['size'], ascending=False)
+
+
+#4) Leiden bepaalde activiteiten vaker tot aanvallen
+attack_df['Activity'].value_counts().head()
+activity_attack = df.groupby('Activity')['Activity'].count().sort_values(ascending=False)
+
+fig = px.bar(activity_attack, x=activity_attack.index, y=activity_attack.values,
+            labels={
+                     "index": " ",
+                     "y": "Attacks"}, title= 'Activities that lead to shark attacks')
+fig.show()
+
+
+

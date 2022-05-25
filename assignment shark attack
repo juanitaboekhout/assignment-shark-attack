@@ -1,72 +1,187 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import io 
-
 %load_ext google.colab.data_table
-The google.colab.data_table extension is already loaded. To reload it, use:
-  %reload_ext google.colab.data_table
 
-attack_df = pd.read_csv('/attacks.csv', encoding = 'cp1252')
-df.head()
+attack_df = pd.read_csv('/content/attacks.csv', encoding = 'cp1252')
+attack_df.head()
 
+attack_df.columns
+
+attack_df = attack_df.drop(columns = ['Case Number', 'Country', 'Name', 'pdf', 'href formula', 'href','Case Number.1', 'Case Number.2', 'original order', 'Area', 'Location', 'Time', 'Unnamed: 22', 'Unnamed: 23', 'Investigator or Source'])
+attack_df.head()
 
 #1Welk type haaien vallen het meeste aan?
-#rename species column
-df = df.rename(columns={'Species ':'Species'})
 
-# species that attack most
-species_attack = df.groupby('Species')['Species'].count().sort_values(ascending=False)
+attack_df = attack_df.rename(columns={'Species ':'Species'})
+species_attack = attack_df.groupby('Species')['Species'].count().sort_values(ascending=False)[0:15]
 
-data = go.Bar(x = species_attack.index,y=species_attack.values,text=species_attack.values,textposition='auto', marker_color='red')
+fig, ax = plt.subplots()
+ax.barh(species_attack.index, species_attack.values)
+plt.title('species that attack the most')
+plt.xlabel('attack count')
+plt.ylabel('species')
+plt.show()
 
-layout = go.Layout(title = 'Shark Attack by Species', 
-                   xaxis=dict(title='Species'),
-                   yaxis=dict(title='Attack Count',visible=False),
-                 paper_bgcolor='rgba(0,0,0,0)',
-                 plot_bgcolor='rgba(0,0,0,0)'
-                  )
-                  
-fig = go.Figure(
-    data=data,
-    layout=layout
-)   
-fig.show()
+#conclusie: witte haaien vallen het meeste aan
 
+attack_df['Age'].unique()
 
 # 2) Worden kinderen eerder aangevallen door haaien
-child_attacks = df.groupby("Age <18")['Age <18'].count() 
-child_attacks = child_attacks[(child_attacks.index == Age <18) | (child_attacks.index == Age)]
-                                                                  
-fig = px.pie(child_attacks, values=child_attacks.values, names=child_attacks.index, title='Shark Attacks children')
-fig.update_layout(height=500, width=600)
-fig.show()
+age_df = attack_df['Age'].copy()
+age_df
 
+age_df.describe()
+
+#lege waarden bekijken 
+age_df.isnull().values.any()
+
+#Drop lege rijen
+age_df.dropna(inplace = True)
+age_df
+
+age_df.value_counts()
+
+#string converteren naar int
+#age_df = age_df.astype({"Age": int})
+
+def extract_ages(age):
+    try:
+        age = int(age)
+        return int(age)
+    except ValueError:
+        if age == '2 to 3 months':
+            return 0
+        if age == '18 months':
+            return 1  
+        elif age == "teen":
+            return 12
+        elif age == "young":
+            return 16
+        elif age == '20s':
+            return 25
+        elif age == '30s':
+            return 35
+        elif age == 'mid-30s':
+            return 35
+        elif age == '36 & 26':
+            return 26 
+        elif age == '50s':
+            return 55   
+        elif age == 'middle-age':
+            return 60
+        elif age == 'elderly':
+            return 80  
+        else: 
+            return np.nan        
+    return int(age)
+
+print(age_df)
+age_df = age_df.apply(extract_ages)
+age_df
+
+age_df.dropna(how="all")
+
+sum(age_df < 18)    
+sum(age_df > 18)   
+
+#percentage aanvallen kinderen tov alle leeftijden
+perc_child = ((age_df <18).sum() / age_df.shape[0]) * 100
+perc_child
+
+perc_adult = ((age_df >18).sum() / age_df.shape[0]) * 100
+perc_adult
+
+#Conclusie vraag 2:
+#Percentage kinderen (<18 jaar) t.o.v. het geheel van alle personen + en -18 jaar is 26,33%. Dus kinderen worden niet meer aangevallen dan volwassenen.
+
+#Grafiek
+fig, ax = plt.subplots()
+perc_child = ((age_df <18).sum() / age_df.shape[0]) * 100
+perc_adult = ((age_df >18).sum() / age_df.shape[0]) * 100
+ax.bar([0, 1], [perc_child, perc_adult], color=["green", "red"])     
+plt.xticks([0, 1], ["<18", ">=18"])                  
+plt.title('shark attacks children')
+plt.xlabel('age')
+plt.ylabel('percentage')
+plt.show() 
+
+
+attack_df['Type'].unique()
+
+attack_df['Type'].value_counts()
+
+attack_df['Fatal (Y/N)'].unique()
 
 #3) Zijn aanvallen wanneer deze uitgedaagd zijn gevaarlijker
-prov_attack = df.groupby('Type')['Type'].count()
-prov_attack = prov_attack[(prov_attack.index == 'Provoked') | (prov_attack.index == 'Unprovoked')]
+dangerous_attacks = attack_df.loc[attack_df['Injury'] == 'Fatal']     
+dangerous_attacks[dangerous_attacks['Fatal (Y/N)'].str.contains("Y|y") == True]   
+ 
+dangerous_attacks.dropna(subset = ['Fatal (Y/N)'], inplace = True)    
+dangerous_attacks    
 
-fig = px.bar(prov_attack, x=prov_attack.values, y=prov_attack.index, orientation='h', labels={'index':'','x':'Attack Count'}, 
-             color = prov_attack.index)
-fig.update_layout(height=500, width=800)
-fig.show()
+#twee dataframes maken
+prov_attacks = attack_df[attack_df.Type == 'Provoked']
+unprov_attacks = attack_df[attack_df.Type == 'Unprovoked']
 
-#is gevaarlijk wel of niet dood gaan? Moet er nog zoiets in:
-#danger_attack = prov_attack.groupby('Fatal (Y/N)')['Fatal (Y/N)'].count()
-#danger_attack = prov_attack(['Type','Fatal (Y/N)'],as_index=False)
-#danger_attack = prov_attack.sort_values(by=['size'], ascending=False)
+prov_attacks.head()
+
+unprov_attacks.head()
+
+provfatal = len(prov_attacks[prov_attacks["Fatal (Y/N)"] == "Y"])
+provnotfatal = len(prov_attacks[prov_attacks["Fatal (Y/N)"] == "N"])
+unprovfatal = len(unprov_attacks[unprov_attacks["Fatal (Y/N)"] == "Y"])
+unprovnotfatal = len(unprov_attacks[unprov_attacks["Fatal (Y/N)"] == "N"])
+
+print(len('provfatal'))
+print(len('provnotfatal'))
+
+print(len('unprovfatal')) 
+print(len('unprovnotfatal'))
+
+#percentage provoked, fatal
+#9 provfatal 
+#12 provnottafal 
+#21 totaal provoked
+
+perc_prov_fatal = (9 / 21) * 100
+perc_prov_fatal
+
+#percentage unprovoked, fatal 
+#11 unprovfatal 
+#14 unprovnotfatal
+#25 totaal unprovoked
+
+perc_unprov_fatal = (11/25 *100)
+perc_unprov_fatal
+
+#Grafiek
+fig, ax = plt.subplots()
+perc_prov_fatal = (9/21) * 100
+perc_unprov_fatal = (11/25 *100)
+ax.bar([0, 1], [perc_prov_fatal, perc_unprov_fatal], color=["green", "red"])     
+plt.xticks([0, 1], ["perc_prov_fatal", "perc_unprov_fatal"])                  
+plt.title('Most dangerous attacks')
+plt.xlabel('provoked / unprovoked')
+plt.ylabel('count attacks')
+plt.show() 
+
+#conclusie vraag 3: 
+#het percentage unprovoked en fataal is 44% en daarom net iets hoger dan provoked en fataal (42,86%), er zijn dus iets meer aanvallen die fataal aflopen die niet uitgedaagd zijn.
+#Het antwoord op de vraag zijn aanvallen wanneer deze uitgedaagd zijn gevaarlijker is dus nee omdat er minder doden vallen onder deze doelgroep
 
 
 #4) Leiden bepaalde activiteiten vaker tot aanvallen
 attack_df['Activity'].value_counts().head()
-activity_attack = df.groupby('Activity')['Activity'].count().sort_values(ascending=False)
+activity_attack = attack_df.groupby('Activity')['Activity'].count().sort_values(ascending=False)[:15]
 
-fig = px.bar(activity_attack, x=activity_attack.index, y=activity_attack.values,
-            labels={
-                     "index": " ",
-                     "y": "Attacks"}, title= 'Activities that lead to shark attacks')
-fig.show()
+fig, ax = plt.subplots(figsize=(20,6))
+ax.bar(activity_attack.index, activity_attack.values)
+plt.title('activities that lead to shark attacks')
+plt.xlabel('activity')
+plt.ylabel('attack count')
+plt.show()
 
-
+#conclusie vraag 4: 
+#de volgende activiteiten leiden vaker tot aanvallen: 1 = Surfen, 2 = zwemmen 3 = vissen.
 

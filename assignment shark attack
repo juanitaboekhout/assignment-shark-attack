@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 %load_ext google.colab.data_table
 
+#attack_df = pd.read_csv('/attacks.csv', encoding = 'cp1252')
 attack_df = pd.read_csv('/content/attacks.csv', encoding = 'cp1252')
 attack_df.head()
 
@@ -106,59 +107,72 @@ plt.xlabel('age')
 plt.ylabel('percentage')
 plt.show() 
 
-
+#3) Zijn aanvallen wanneer deze uitgedaagd zijn gevaarlijker
 attack_df['Type'].unique()
 
 attack_df['Type'].value_counts()
 
 attack_df['Fatal (Y/N)'].unique()
 
-#3) Zijn aanvallen wanneer deze uitgedaagd zijn gevaarlijker
-dangerous_attacks = attack_df.loc[attack_df['Injury'] == 'Fatal']     
-dangerous_attacks[dangerous_attacks['Fatal (Y/N)'].str.contains("Y|y") == True]   
- 
-dangerous_attacks.dropna(subset = ['Fatal (Y/N)'], inplace = True)    
-dangerous_attacks    
-
 #twee dataframes maken
 prov_attacks = attack_df[attack_df.Type == 'Provoked']
 unprov_attacks = attack_df[attack_df.Type == 'Unprovoked']
 
 prov_attacks.head()
+print(len(prov_attacks))
 
 unprov_attacks.head()
+print(len(unprov_attacks))
 
-provfatal = len(prov_attacks[prov_attacks["Fatal (Y/N)"] == "Y"])
-provnotfatal = len(prov_attacks[prov_attacks["Fatal (Y/N)"] == "N"])
-unprovfatal = len(unprov_attacks[unprov_attacks["Fatal (Y/N)"] == "Y"])
-unprovnotfatal = len(unprov_attacks[unprov_attacks["Fatal (Y/N)"] == "N"])
+provfatal = prov_attacks[prov_attacks['Fatal (Y/N)'].str.contains("Y|y") == True]
+provfatal
 
-print(len('provfatal'))
-print(len('provnotfatal'))
+#provtafal = 19
 
-print(len('unprovfatal')) 
-print(len('unprovnotfatal'))
+provnonfatal = prov_attacks[prov_attacks['Fatal (Y/N)'].str.contains("N") == True]
+provnonfatal
 
-#percentage provoked, fatal
-#9 provfatal 
-#12 provnottafal 
-#21 totaal provoked
+#provnonfatal=551
 
-perc_prov_fatal = (9 / 21) * 100
-perc_prov_fatal
+#dangerous_attacks[dangerous_attacks['Fatal (Y/N)'].str.contains("Y|y") == True]
+#['Fatal (Y/N)'].str.contains("Y|y") == True]
+#provfatal = prov_attacks[prov_attacks['Fatal (Y/N)'].str.contains("Y|y") == True]
+#provfatal = len(prov_attacks[prov_attacks["Fatal (Y/N)"] == "Y/y"])
+#provnotfatal = len(prov_attacks[prov_attacks["Fatal (Y/N)"] == "N/ N"])
+#unprovfatal = len(unprov_attacks[unprov_attacks["Fatal (Y/N)"] == "Y/y"])
+#unprovnotfatal = len(unprov_attacks[unprov_attacks["Fatal (Y/N)"] == "N/ N"])
 
-#percentage unprovoked, fatal 
-#11 unprovfatal 
-#14 unprovnotfatal
-#25 totaal unprovoked
+#print(len('provfatal'))
+#print(len('provnotfatal'))
+#print(len('unprovfatal')) 
+#print(len('unprovnotfatal'))
 
-perc_unprov_fatal = (11/25 *100)
+unprovfatal = unprov_attacks[unprov_attacks['Fatal (Y/N)'].str.contains("Y|y") == True]
+unprovfatal
+
+#unprovfatal = 1181
+
+unprovnotfatal = unprov_attacks[unprov_attacks['Fatal (Y/N)'].str.contains("N") == True]
+unprovnotfatal
+
+#unprovnotfatal = 3408
+
+#percentage provoked
+#provfatal = 19
+#provnotfatal = 551
+perc_prov_fatal = (19 / 551) * 100
+perc_prov_fatal  
+#3,45% van de provoked attacks = fataal
+
+#percentage unprovoked
+perc_unprov_fatal = (1181/3408 *100)
 perc_unprov_fatal
+#34,65% van de unprovoked attacks = fataal
 
 #Grafiek
 fig, ax = plt.subplots()
-perc_prov_fatal = (9/21) * 100
-perc_unprov_fatal = (11/25 *100)
+perc_prov_fatal = (19/551) * 100
+perc_unprov_fatal = (1181/3408 *100)
 ax.bar([0, 1], [perc_prov_fatal, perc_unprov_fatal], color=["green", "red"])     
 plt.xticks([0, 1], ["perc_prov_fatal", "perc_unprov_fatal"])                  
 plt.title('Most dangerous attacks')
@@ -167,8 +181,11 @@ plt.ylabel('count attacks')
 plt.show() 
 
 #conclusie vraag 3: 
-#het percentage unprovoked en fataal is 44% en daarom net iets hoger dan provoked en fataal (42,86%), er zijn dus iets meer aanvallen die fataal aflopen die niet uitgedaagd zijn.
-#Het antwoord op de vraag zijn aanvallen wanneer deze uitgedaagd zijn gevaarlijker is dus nee omdat er minder doden vallen onder deze doelgroep
+#het percentage provoked en fataal is 3,45%, unprovoked en fataal = 34,65%.
+#Er zijn 19+551 = 570 aanvallen provoked
+#Er zijn 1181 + 3408 =4589 aanvallen unprovoked dus er zijn meer aanvallen unprovoked dan provoked
+#Hiervan = #3,45% van de provoked attacks fataal en 34,65% van de unprovoked attacks fataal. Er zijn dus meer aanvallen die fataal aflopen die niet uitgedaagd zijn.
+#Conclusie aanvallen zijn niet gevaarlijker wanneer deze uitgedaagd omdat er minder doden vallen onder deze doelgroep
 
 
 #4) Leiden bepaalde activiteiten vaker tot aanvallen
